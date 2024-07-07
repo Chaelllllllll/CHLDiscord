@@ -1,0 +1,4 @@
+name: ChlBot
+env:
+  token: ${{ secrets.DCTOKEN }}
+run: main.py
