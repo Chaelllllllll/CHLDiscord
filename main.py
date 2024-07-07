@@ -1,45 +1,41 @@
 import requests
+from flask import Flask, request, jsonify
 
-# Your Discord webhook URL
-DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1241780772210343996/ZCIBOm5rV3xQ9MFVy0R2RcwOHXeAxCcNFp0supY4EQjIs_PbJjfZ7S0cSkal7WrThuFc'
+app = Flask(__name__)
 
-def get_response(prompt_input):
-    api_url = 'https://markdevs-api.onrender.com/api/gpt4o'
-    data = {'q': prompt_input}
-
-    try:
-        response = requests.get(api_url, params=data)
-        if response.status_code == 200:
-            response_json = response.json()
-            if response_json.get('status'):
-                return response_json['response']
-            else:
-                return "Failed to get response from the API."
-        else:
-            return "Failed to get response from the API."
-    except requests.exceptions.RequestException as e:
-        return f"Error: {e}"
+discord_webhook_url = "https://discord.com/api/webhooks/1241780772210343996/ZCIBOm5rV3xQ9MFVy0R2RcwOHXeAxCcNFp0supY4EQjIs_PbJjfZ7S0cSkal7WrThuFc"
 
 def send_to_discord(message):
-    data = {
+    payload = {
         "content": message
     }
     try:
-        response = requests.post(DISCORD_WEBHOOK_URL, json=data)
-        if response.status_code == 204:
-            print("Message sent to Discord successfully.")
-        else:
-            print(f"Failed to send message to Discord: {response.status_code}")
+        response = requests.post(discord_webhook_url, json=payload)
+        response.raise_for_status()
+        print("Message sent to Discord")
     except requests.exceptions.RequestException as e:
-        print(f"Error: {e}")
+        print(f"Failed to send message to Discord: {e}")
 
-def main():
-    while True:
-        prompt_input = input("Enter your prompt (or 'exit' to quit): ")
-        if prompt_input.lower() == 'exit':
-            break
-        response = get_response(prompt_input)
-        send_to_discord(response)
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    data = request.json
+    prompt_input = data.get('message')
+    if prompt_input:
+        # Assuming your API endpoint for processing is different, replace with your actual API endpoint
+        api_url = 'https://markdevs-api.onrender.com/api/gpt4o'
+        try:
+            response = requests.get(api_url, params={'q': prompt_input})
+            response.raise_for_status()
+            data = response.json()
+            if data.get('status'):
+                send_to_discord(data.get('response'))
+            else:
+                send_to_discord('Failed to get response from API.')
+        except requests.exceptions.RequestException as e:
+            send_to_discord('Failed to connect to API.')
+            print(f"Error accessing API: {e}")
+    return jsonify({'status': 'ok'})
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    app.run(debug=True)
+
