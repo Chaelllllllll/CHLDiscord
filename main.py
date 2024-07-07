@@ -2,8 +2,9 @@ import discord
 import requests
 import os
 from dotenv import load_dotenv
+from flask import Flask
 
-# Load environment variables from .en
+# Load environment variables from .env file
 load_dotenv()
 
 intents = discord.Intents.default()
@@ -54,4 +55,18 @@ async def on_message(message):
         else:
             await message.channel.send("Please provide a prompt after the command.")
 
-client.run(TOKEN)
+# Create a Flask app
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "CHL is running!"
+
+if __name__ == "__main__":
+    # Start the Flask app in a separate thread
+    from threading import Thread
+    thread = Thread(target=lambda: app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5000))))
+    thread.start()
+
+    # Start the Discord bot
+    client.run(TOKEN)
