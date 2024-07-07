@@ -1,10 +1,6 @@
 import discord
 import requests
-import os
-from dotenv import load_dotenv
-
-# Load environment variables from .env file if running locally
-load_dotenv()
+import json
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -12,8 +8,10 @@ intents.message_content = True  # Enable message content intent
 
 client = discord.Client(intents=intents)
 
-# Retrieve the bot token from the environment variable
-TOKEN = os.getenv("BOT_TOKEN") 
+# Load the token from the config.json file
+with open('config.json') as config_file:
+    config = json.load(config_file)
+TOKEN = config['DISCORD_BOT_TOKEN']
 
 # API endpoint
 API_URL = 'https://markdevs-api.onrender.com/api/gpt4o'
