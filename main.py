@@ -2,7 +2,7 @@ import requests
 import json
 
 # Your Discord webhook URL
-WEBHOOK_URL = 'YOUR_DISCORD_WEBHOOK_URL'
+WEBHOOK_URL = 'https://discord.com/api/webhooks/1241780772210343996/ZCIBOm5rV3xQ9MFVy0R2RcwOHXeAxCcNFp0supY4EQjIs_PbJjfZ7S0cSkal7WrThuFc'
 
 # API endpoint
 API_URL = 'https://markdevs-api.onrender.com/api/gpt4o'
