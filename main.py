@@ -1,41 +1,57 @@
+import discord
 import requests
-from flask import Flask, request, jsonify
+import os
+from dotenv import load_dotenv
 
-app = Flask(__name__)
+# Load environment variables from .env file
+load_dotenv()
 
-discord_webhook_url = "https://discord.com/api/webhooks/1241780772210343996/ZCIBOm5rV3xQ9MFVy0R2RcwOHXeAxCcNFp0supY4EQjIs_PbJjfZ7S0cSkal7WrThuFc"
+intents = discord.Intents.default()
+intents.messages = True
+intents.message_content = True  # Enable message content intent
 
-def send_to_discord(message):
-    payload = {
-        "content": message
-    }
+client = discord.Client(intents=intents)
+
+# Your bot token
+TOKEN = os.getenv('DISCORD_BOT_TOKEN')
+
+# API endpoint
+API_URL = 'https://markdevs-api.onrender.com/api/gpt4o'
+
+def get_api_response(prompt_input):
+    data = {'q': prompt_input}
     try:
-        response = requests.post(discord_webhook_url, json=payload)
-        response.raise_for_status()
-        print("Message sent to Discord")
-    except requests.exceptions.RequestException as e:
-        print(f"Failed to send message to Discord: {e}")
-
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    data = request.json
-    prompt_input = data.get('message')
-    if prompt_input:
-        # Assuming your API endpoint for processing is different, replace with your actual API endpoint
-        api_url = 'https://markdevs-api.onrender.com/api/gpt4o'
-        try:
-            response = requests.get(api_url, params={'q': prompt_input})
-            response.raise_for_status()
-            data = response.json()
-            if data.get('status'):
-                send_to_discord(data.get('response'))
+        response = requests.get(API_URL, params=data)
+        if response.status_code == 200:
+            response_json = response.json()
+            if response_json.get('status'):
+                return response_json['response']
             else:
-                send_to_discord('Failed to get response from API.')
-        except requests.exceptions.RequestException as e:
-            send_to_discord('Failed to connect to API.')
-            print(f"Error accessing API: {e}")
-    return jsonify({'status': 'ok'})
+                return "Failed to get response."
+        else:
+            return "Failed to get response."
+    except requests.exceptions.RequestException as e:
+        return f"Error: {e}"
 
-if __name__ == '__main__':
-    app.run(debug=True)
+@client.event
+async def on_ready():
+    print(f'We have logged in as {client.user}')
 
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return
+
+    if message.content.startswith('!ask'):
+        prompt_input = message.content[len('!ask '):].strip()
+        if prompt_input:
+            response = get_api_response(prompt_input)
+            if len(response) > 2000:
+                for i in range(0, len(response), 2000):
+                    await message.channel.send(response[i:i+2000])
+            else:
+                await message.channel.send(response)
+        else:
+            await message.channel.send("Please provide a prompt after the command.")
+
+client.run(TOKEN)

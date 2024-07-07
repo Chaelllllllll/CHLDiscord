@@ -1,1 +1,4 @@
 requests
+discord
+discord.py
+python-dotenv
