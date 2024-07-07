@@ -8,8 +8,11 @@ intents.message_content = True  # Enable message content intent
 
 client = discord.Client(intents=intents)
 
-# Load the token from the config.json file
-TOKEN = os.environ['token']
+# Load the token from the environment variable
+TOKEN = os.getenv('DISCORD_BOT_TOKEN')
+
+if not TOKEN:
+    raise ValueError("No token provided. Set the DISCORD_BOT_TOKEN environment variable.")
 
 # API endpoint
 API_URL = 'https://markdevs-api.onrender.com/api/gpt4o'
