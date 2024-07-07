@@ -3,7 +3,7 @@ import requests
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Load environment variables from .en
 load_dotenv()
 
 intents = discord.Intents.default()
